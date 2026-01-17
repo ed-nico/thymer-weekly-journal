@@ -6,8 +6,7 @@ A [Thymer](https://thymer.com) plugin that displays your journal pages side by s
 
 - **7-Day View** - See your entire week's journal entries at a glance
 - **3-Day View** - Focused view showing yesterday, today, and tomorrow
-- **Properties Display** - Shows journal properties (Sleep, Lunch, Dinner, Exercise, etc.)
-- **Full Content** - Headings, tasks, lists, nested items
+- **Full Content** - Headings, tasks, lists, nested items, properties
 - **Week Navigation** - Browse previous/next weeks
 - **Today Highlighting** - Current day is visually highlighted
 
