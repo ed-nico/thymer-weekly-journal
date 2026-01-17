@@ -11,6 +11,15 @@ A [Thymer](https://thymer.com) plugin that displays your journal pages side by s
 - **Week Navigation** - Browse previous/next weeks
 - **Today Highlighting** - Current day is visually highlighted
 
+## Screenshots
+
+- **7 Day View:**
+<img width="3324" height="1650" alt="CleanShot 2026-01-17 at 05 53 32@2x" src="https://github.com/user-attachments/assets/6ac94db2-3f00-4f42-a13e-2fb3fc66bb80" />
+
+- **3 Day View:**
+<img width="3330" height="1528" alt="CleanShot 2026-01-17 at 05 52 29@2x" src="https://github.com/user-attachments/assets/db9e995f-942a-4bb7-b3a7-4a37b13e93f8" />
+
+
 ## Installation
 
 1. In Thymer, open the **Command Palette** (Cmd/Ctrl + K)
