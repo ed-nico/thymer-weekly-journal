@@ -5,10 +5,10 @@ A [Thymer](https://thymer.com) plugin that displays your journal pages side by s
 ## Features
 
 - **7-Day View** - See your entire week's journal entries at a glance
-- **3-Day View** - Focused view showing yesterday, today, and tomorrow
+- **3-Day View** - Focused view showing 3 days
 - **Full Content** - Headings, tasks, lists, nested items, properties
 - **Week Navigation** - Browse previous/next weeks
-- **Today Highlighting** - Current day is visually highlighted
+- **Today** - Easily jump back to the current week
 
 ## Screenshots
 
@@ -21,13 +21,13 @@ A [Thymer](https://thymer.com) plugin that displays your journal pages side by s
 
 ## Installation
 
-1. In Thymer, open the **Command Palette** (Cmd/Ctrl + K)
+1. In Thymer, open the **Command Palette** (Cmd/Ctrl + p)
 2. Search for **"Plugins"** and select it
-3. Click **"Create Global Plugin"**
+3. In **Global Plugins**, click **"Create Plugin"**
 4. Give it a name (e.g., "Weekly Journal")
 5. Click **"Edit Code"**
-6. Copy the contents of [`plugin.js`](plugin.js) into the **Code** field
-7. Copy the contents of [`plugin.json`](plugin.json) into the **Configuration** field
+6. Copy the contents of [`plugin.json`](plugin.json) into the **Configuration** field
+7. Copy the contents of [`plugin.js`](plugin.js) into the **Custom Code** field
 8. Click **Save**
 
 The plugin will appear in your sidebar.
