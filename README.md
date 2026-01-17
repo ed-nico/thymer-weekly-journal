@@ -1,4 +1,4 @@
-# Weekly Journal for Thymer
+# Weekly Journal View for Thymer
 
 A [Thymer](https://thymer.com) plugin that displays your journal pages side by side in a weekly or 3-day view.
 
