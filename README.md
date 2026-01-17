@@ -40,6 +40,10 @@ The plugin will appear in your sidebar.
 - Use **Prev** / **Next** to navigate between weeks
 - Click **Today** to jump back to the current week
 
+## Known Limitations
+- View only for now - cannot edit text
+- Cannot currently navigate to the journal page on click
+
 ## Requirements
 
 - Thymer with a "Journals" collection (the default journal)
