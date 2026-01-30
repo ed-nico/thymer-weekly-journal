@@ -41,7 +41,6 @@ The plugin will appear in your sidebar.
 
 ## Known Limitations
 - View only for now - cannot edit text
-- Cannot currently navigate to the journal page on click
 
 ## Requirements
 
