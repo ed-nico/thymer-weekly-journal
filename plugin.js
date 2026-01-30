@@ -272,6 +272,60 @@ const WEEKLY_JOURNAL_CSS = `
   .line-item-children {
     margin-top: 4px;
   }
+
+  .weekly-journal-day-content a {
+    color: var(--accent-color);
+    text-decoration: none;
+  }
+
+  .weekly-journal-day-content a:hover {
+    text-decoration: underline;
+  }
+
+  .weekly-journal-day-content .segment-bold {
+    font-weight: 600;
+  }
+
+  .weekly-journal-day-content .segment-italic {
+    font-style: italic;
+  }
+
+  .weekly-journal-day-content .segment-code {
+    font-family: monospace;
+    background: var(--bg-active);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .weekly-journal-day-content .segment-datetime {
+    color: var(--accent-color);
+  }
+
+  .weekly-journal-day-content .segment-hashtag {
+    color: var(--accent-color);
+  }
+
+  .weekly-journal-day-header.clickable {
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .weekly-journal-day-header.clickable:hover {
+    background: var(--bg-active);
+  }
+
+  .weekly-journal-day-header .open-icon {
+    float: right;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .weekly-journal-day-header.clickable:hover .open-icon {
+    opacity: 1;
+  }
 `;
 
 class Plugin extends AppPlugin {
@@ -433,6 +487,25 @@ class Plugin extends AppPlugin {
       dayHeader.appendChild(dayNameEl);
       dayHeader.appendChild(dayDate);
 
+      if (journal) {
+        dayHeader.classList.add("clickable");
+        const openIcon = document.createElement("span");
+        openIcon.className = "open-icon";
+        openIcon.innerHTML = this.ui.createIcon("external-link").outerHTML;
+        dayHeader.appendChild(openIcon);
+
+        dayHeader.onclick = async () => {
+          const newPanel = await this.ui.createPanel();
+          if (newPanel) {
+            newPanel.navigateTo({
+              type: "edit_panel",
+              rootId: journal.guid,
+              workspaceGuid: this.getWorkspaceGuid(),
+            });
+          }
+        };
+      }
+
       const dayContent = document.createElement("div");
       dayContent.className = "weekly-journal-day-content";
 
@@ -580,13 +653,15 @@ class Plugin extends AppPlugin {
       el.style.marginLeft = `${depth * 16}px`;
     }
 
-    const text = this.getItemText(item);
+    // Use HTML rendering for segments (handles links, formatting, etc.)
+    const segmentsHtml = this.renderSegmentsHtml(item.segments);
+    const plainText = this.getItemText(item);
 
     switch (item.type) {
       case "heading":
         const size = item.heading_size || 2;
         el.className += ` heading heading-${size}`;
-        el.textContent = text;
+        el.innerHTML = segmentsHtml || this.escapeHtml(plainText);
         break;
 
       case "task":
@@ -594,34 +669,36 @@ class Plugin extends AppPlugin {
         const isDone = item.done === 8;
         el.innerHTML = `
           <div class="task-checkbox${isDone ? " done" : ""}"></div>
-          <span class="task-text${isDone ? " done" : ""}">${this.escapeHtml(text)}</span>
+          <span class="task-text${isDone ? " done" : ""}">${segmentsHtml}</span>
         `;
         break;
 
       case "olist":
         el.className += " list-item olist";
-        el.innerHTML = `<span class="list-marker">1.</span> ${this.escapeHtml(text)}`;
+        el.innerHTML = `<span class="list-marker">1.</span> ${segmentsHtml}`;
         break;
 
       case "ulist":
         el.className += " list-item ulist";
-        el.innerHTML = `<span class="list-marker">•</span> ${this.escapeHtml(text)}`;
+        el.innerHTML = `<span class="list-marker">•</span> ${segmentsHtml}`;
         break;
 
       case "document":
       case "ref":
         el.className += " reference";
-        el.innerHTML = `<span class="ref-icon">📄</span> ${this.escapeHtml(text || "Linked document")}`;
+        el.innerHTML = `<span class="ref-icon">📄</span> ${segmentsHtml || this.escapeHtml(plainText) || "Linked document"}`;
         break;
 
       case "transclusion":
         el.className += " transclusion";
-        el.innerHTML = `<span class="ref-icon">↗</span> ${this.escapeHtml(text || "Transcluded content")}`;
+        el.innerHTML = `<span class="ref-icon">↗</span> ${segmentsHtml || this.escapeHtml(plainText) || "Transcluded content"}`;
         break;
 
       default:
-        if (text) {
-          el.textContent = text;
+        if (segmentsHtml) {
+          el.innerHTML = segmentsHtml;
+        } else if (plainText) {
+          el.textContent = plainText;
         } else {
           return null;
         }
@@ -650,12 +727,100 @@ class Plugin extends AppPlugin {
       .map((seg) => {
         if (seg.type === "text" && typeof seg.text === "string") {
           return seg.text;
-        } else if (seg.type === "ref" && seg.text?.name) {
-          return `[[${seg.text.name}]]`;
+        } else if (seg.type === "ref" && seg.text?.guid) {
+          // Look up the referenced record to get its name
+          const refRecord = this.data.getRecord(seg.text.guid);
+          const refName = refRecord?.getName() || "[link]";
+          return `[[${refName}]]`;
+        } else if (seg.type === "datetime" && seg.text?.d) {
+          const d = seg.text.d;
+          const date = new Date(`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`);
+          return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        } else if (typeof seg.text === "string") {
+          return seg.text;
         }
         return "";
       })
       .join("");
+  }
+
+  renderSegmentsHtml(segments) {
+    if (!segments || segments.length === 0) return "";
+
+    return segments.map((seg) => {
+      const text = typeof seg.text === "string" ? seg.text : "";
+
+      switch (seg.type) {
+        case "text":
+          return this.escapeHtml(text);
+
+        case "bold":
+          return `<span class="segment-bold">${this.escapeHtml(text)}</span>`;
+
+        case "italic":
+          return `<span class="segment-italic">${this.escapeHtml(text)}</span>`;
+
+        case "code":
+          return `<span class="segment-code">${this.escapeHtml(text)}</span>`;
+
+        case "link":
+          // Link segment - text is the URL
+          if (text) {
+            return `<a href="${this.escapeHtml(text)}" target="_blank">${this.escapeHtml(text)}</a>`;
+          }
+          return "";
+
+        case "linkobj":
+          // Link object - text can be {url, label} or just URL string
+          let url = "";
+          let label = "";
+          if (seg.text && typeof seg.text === "object") {
+            url = seg.text.url || seg.text.href || "";
+            label = seg.text.label || seg.text.title || url;
+          } else if (text) {
+            url = text;
+            label = text;
+          }
+          if (url) {
+            return `<a href="${this.escapeHtml(url)}" target="_blank">${this.escapeHtml(label)}</a>`;
+          }
+          return this.escapeHtml(label);
+
+        case "ref":
+          // Ref segments contain {guid: '...'} - we need to look up the record name
+          const refGuid = seg.text?.guid;
+          if (refGuid) {
+            // Look up the referenced record to get its name
+            const refRecord = this.data.getRecord(refGuid);
+            const refName = refRecord?.getName() || "[link]";
+            return `<span class="segment-hashtag">[[${this.escapeHtml(refName)}]]</span>`;
+          }
+          return `<span class="segment-hashtag">[ref]</span>`;
+
+        case "hashtag":
+          return `<span class="segment-hashtag">#${this.escapeHtml(text)}</span>`;
+
+        case "datetime":
+          if (seg.text?.d) {
+            const d = seg.text.d;
+            const date = new Date(`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`);
+            const formatted = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            return `<span class="segment-datetime">${formatted}</span>`;
+          }
+          return "";
+
+        default:
+          // For unknown types, try to extract text
+          if (text) {
+            // Check if it looks like a URL
+            if (text.startsWith("http://") || text.startsWith("https://")) {
+              return `<a href="${this.escapeHtml(text)}" target="_blank">${this.escapeHtml(text)}</a>`;
+            }
+            return this.escapeHtml(text);
+          }
+          return "";
+      }
+    }).join("");
   }
 
   escapeHtml(text) {
